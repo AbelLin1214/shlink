@@ -98,9 +98,18 @@ readonly class ShortUrlTitleResolutionHelper implements ShortUrlTitleResolutionH
         // Get the page's charset from Content-Type header
         preg_match(self::CHARSET_VALUE, $contentType, $charsetMatches);
 
-        $title = isset($charsetMatches[1])
-            ? mb_convert_encoding($titleMatches[1], 'utf8', $charsetMatches[1])
-            : $titleMatches[1];
+        $title = $titleMatches[1];
+        if (isset($charsetMatches[1])) {
+            try {
+                $convertedTitle = mb_convert_encoding($titleMatches[1], 'utf8', $charsetMatches[1]);
+                if ($convertedTitle !== false) {
+                    $title = $convertedTitle;
+                }
+            } catch (Throwable) {
+                // Silently fallback to original title if charset conversion fails
+            }
+        }
+        
         return html_entity_decode(trim($title));
     }
 }
